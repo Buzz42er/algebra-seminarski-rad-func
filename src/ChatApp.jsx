@@ -1,8 +1,9 @@
 import './App.css';
-import { Component } from 'react';
+import { Component, useState } from 'react';
 import MessageBubbles from './components/MessageBubbles';
 import InputField from './components/InputField';
 import logo from  "./2i.svg";
+import { useEffect } from 'react';
 
 function randomName() {
   const adjectives = [
@@ -37,36 +38,48 @@ function randomColor() {
 }
 
 
-class ChatApp extends Component {
-  state = {
-    messages: [],
-    member: {
+function ChatApp () {
+
+
+    const [buble, setBuble] = useState({
+      messages: [],
+      member: {
       username: randomName(),
       color: randomColor(),
     }
-  }
-  constructor() {
-    super();
-    this.drone = new window.Scaledrone("KRxTFNfTQOZwor7e", {
-      data: this.state.member
+    })
+
+    const onSendMessage = () => {};
+    
+  useEffect(() => {
+    const drone = new window.Scaledrone("KRxTFNfTQOZwor7e", {
+      data: buble.member
     });
-    this.drone.on('open', error => {
-      if (error) {
-        return console.error(error);
-      }
-      const member = {...this.state.member};
-      member.id = this.drone.clientId;
-      this.setState({member});
-    });
-    const room = this.drone.subscribe("observable-room");
-    room.on('data', (data, member) => {
-      const messages = this.state.messages;
-      messages.push({member, text: data});
-      this.setState({messages});
-    });
-  }
+        drone.on('open', error => {
+          if (error) {
+            return console.error(error);
+          }
+          const member = {...buble.member};
+          member.id = drone.clientId;
+        });
+        const room = drone.subscribe("observable-room");
+        room.on('data', (data, member) => {
+          const messages = buble.messages;
+          messages.push({member, text: data});
+
+        });
+
+        onSendMessage = (message) => {
+          drone.publish({
+            room: "observable-room",
+            message
+          });
+        }
+        
+  }, [])
   
-render(){
+  
+
   return (
     <div className="App">
       {/* header-------------------------------------------------------------------------------------- */}
@@ -94,14 +107,14 @@ render(){
           <div className='messages-div'>
             {/* message area */}
             <MessageBubbles
-              messages={this.state.messages}
-              currentMember={this.state.member}
+              messages={buble.messages}
+              currentMember={buble.member}
             />
           </div>
           <div className='input-div'>
             {/* input area */}
             <InputField
-              onSendMessage={this.onSendMessage}
+              onSendMessage={onSendMessage}
             />
           </div>
         </section>
@@ -113,14 +126,4 @@ render(){
     </div>
   );
 }
-
-onSendMessage = (message) => {
-  this.drone.publish({
-    room: "observable-room",
-    message
-  });
-}
-
-}
-
 export default ChatApp;

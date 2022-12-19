@@ -1,37 +1,25 @@
-import {Component} from "react";
+import {Component, useRef, useEffect} from "react";
 import React from "react";
 import logo from  "../2i.svg";
 
 
-class MessageBubbles extends Component {
+function MessageBubbles (props) {
   
-  scrollToBottom = () => {
-    this.messagesEnd.scrollIntoView({ behavior: "smooth" });
-  }
-  
-  componentDidMount() {
-    this.scrollToBottom();
-  }
-  
-  componentDidUpdate() {
-    this.scrollToBottom();
+
+  const messagesEndRef = useRef(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  render() {
-    const {messages} = this.props;
-    return (
-      <ul className="Messages-list">
-        {messages.map((m, i) => <li key={i} className="classLocator">{this.renderMessage(m)}</li> )}
-        <div style={{ float:"left", clear: "both" }}
-             ref={(el) => { this.messagesEnd = el; }}>
-        </div>
-      </ul>
-    );
-  }
+  useEffect(() => {
+    scrollToBottom()
+  }, [props.messages]);
 
-  renderMessage(message) {
+
+  function renderMessage(message) {
     const {member, text} = message;
-    const {currentMember} = this.props;
+    const {currentMember} = props;
     const messageFromMe = member.id === currentMember.id;
     const className = messageFromMe ?
       "Messages-message currentMember" : "Messages-message";
@@ -52,6 +40,20 @@ class MessageBubbles extends Component {
       </div>
     );
   }
+
+
+    const {messages} = props;
+    return (
+      <ul className="Messages-list">
+        {messages.map((m, i) => <li key={i} className="classLocator">{renderMessage(m)}</li> )}
+        <div style={{ float:"left", clear: "both" }}
+             ref={messagesEndRef}>
+        </div>
+      </ul>
+    );
+  
+
+
 }
 
 export default MessageBubbles;
